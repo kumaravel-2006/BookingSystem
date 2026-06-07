@@ -52,11 +52,18 @@ const Login = ({ navigateTo, setUser }) => {
           </button>
         </form>
 
-        <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-          Don't have an account?{' '}
-          <a href="#register" onClick={(e) => { e.preventDefault(); navigateTo('register'); }} style={{ fontWeight: '600' }}>
-            Sign Up
-          </a>
+        <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div>
+            Don't have an account?{' '}
+            <a href="#register" onClick={(e) => { e.preventDefault(); navigateTo('register'); }} style={{ fontWeight: '600' }}>
+              Sign Up
+            </a>
+          </div>
+          <div>
+            <a href="#forgot-password" onClick={(e) => { e.preventDefault(); navigateTo('forgot-password'); }} style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+              Forgot Password?
+            </a>
+          </div>
         </div>
       </div>
     </div>

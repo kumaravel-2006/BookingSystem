@@ -1,18 +1,32 @@
 import { useState } from 'react';
 import './App.css';
-import Home from './pages/home';
-import Movie from './pages/movie';
+
+// Import new modular page components
+import Home from './pages/home/Home';
+import EventList from './pages/events/EventList';
+import EventDetails from './pages/events/EventDetails';
+import SeatSelection from './pages/booking/SeatSelection';
+import Checkout from './pages/booking/Checkout';
+import BookingSuccess from './pages/booking/BookingSuccess';
+import WaitingQueue from './pages/queue/WaitingQueue';
+import MyBookings from './pages/profile/MyBookings';
 import Theatres from './pages/theatres';
-import Booking from './pages/booking';
-import Profile from './pages/profile';
-import Login from './pages/login';
-import Register from './pages/register';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [activeCity, setActiveCity] = useState('New York');
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [user, setUser] = useState(null); // Simulated user session
+
+  // Dynamic booking transaction states
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedShowtime, setSelectedShowtime] = useState(null);
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [lastBookingDetails, setLastBookingDetails] = useState(null);
+  const [sessionBookings, setSessionBookings] = useState([]);
 
   const cities = ['New York', 'Los Angeles', 'Chicago', 'London', 'Tokyo', 'Mumbai'];
 
@@ -26,21 +40,128 @@ function App() {
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return <Home navigateTo={navigateTo} activeCity={activeCity} />;
+        return (
+          <Home 
+            navigateTo={navigateTo} 
+            activeCity={activeCity} 
+            onSelectEvent={setSelectedEvent} 
+          />
+        );
       case 'movies':
-        return <Movie navigateTo={navigateTo} />;
+        return (
+          <EventList 
+            navigateTo={navigateTo} 
+            onSelectEvent={setSelectedEvent} 
+          />
+        );
+      case 'event-details':
+        return (
+          <EventDetails 
+            navigateTo={navigateTo} 
+            selectedEvent={selectedEvent} 
+            onSelectShowtime={setSelectedShowtime} 
+          />
+        );
+      case 'waiting-queue':
+        return (
+          <WaitingQueue 
+            navigateTo={navigateTo} 
+            selectedEvent={selectedEvent} 
+          />
+        );
+      case 'seat-selection':
+        return (
+          <SeatSelection 
+            navigateTo={navigateTo} 
+            selectedEvent={selectedEvent} 
+            selectedShowtime={selectedShowtime} 
+            onConfirmSeats={setSelectedSeats} 
+          />
+        );
+      case 'checkout':
+        return (
+          <Checkout 
+            navigateTo={navigateTo} 
+            selectedEvent={selectedEvent} 
+            selectedShowtime={selectedShowtime} 
+            selectedSeats={selectedSeats}
+            onPaymentSuccess={(details) => {
+              setLastBookingDetails(details);
+              setSessionBookings(prev => [
+                {
+                  bookingId: details.bookingId,
+                  movieTitle: selectedEvent.title,
+                  date: selectedShowtime.date,
+                  time: selectedShowtime.time,
+                  seats: details.selectedSeats,
+                  totalPaid: details.totalPaid,
+                  status: 'upcoming'
+                },
+                ...prev
+              ]);
+            }}
+          />
+        );
+      case 'booking-success':
+        return (
+          <BookingSuccess 
+            navigateTo={navigateTo} 
+            selectedEvent={selectedEvent} 
+            selectedShowtime={selectedShowtime} 
+            selectedSeats={selectedSeats} 
+            lastBookingDetails={lastBookingDetails}
+          />
+        );
       case 'theatres':
-        return <Theatres navigateTo={navigateTo} activeCity={activeCity} />;
+        return (
+          <Theatres 
+            navigateTo={navigateTo} 
+            activeCity={activeCity} 
+          />
+        );
       case 'bookings':
-        return <Booking navigateTo={navigateTo} user={user} />;
       case 'profile':
-        return <Profile navigateTo={navigateTo} user={user} setUser={setUser} />;
+        return (
+          <MyBookings 
+            navigateTo={navigateTo} 
+            user={user} 
+            setUser={setUser} 
+            sessionBookings={sessionBookings}
+            onCancelSessionBooking={(bookingId) => {
+              setSessionBookings(prev => 
+                prev.map(sb => sb.bookingId === bookingId ? { ...sb, status: 'cancelled' } : sb)
+              );
+            }}
+          />
+        );
       case 'login':
-        return <Login navigateTo={navigateTo} setUser={setUser} />;
+        return (
+          <Login 
+            navigateTo={navigateTo} 
+            setUser={setUser} 
+          />
+        );
       case 'register':
-        return <Register navigateTo={navigateTo} setUser={setUser} />;
+        return (
+          <Register 
+            navigateTo={navigateTo} 
+            setUser={setUser} 
+          />
+        );
+      case 'forgot-password':
+        return (
+          <ForgotPassword 
+            navigateTo={navigateTo} 
+          />
+        );
       default:
-        return <Home navigateTo={navigateTo} activeCity={activeCity} />;
+        return (
+          <Home 
+            navigateTo={navigateTo} 
+            activeCity={activeCity} 
+            onSelectEvent={setSelectedEvent} 
+          />
+        );
     }
   };
 
@@ -75,7 +196,7 @@ function App() {
                 className={currentPage === 'movies' ? 'active' : ''} 
                 onClick={(e) => { e.preventDefault(); navigateTo('movies'); }}
               >
-                Movies
+                Events
               </a>
             </li>
             <li>
@@ -197,7 +318,7 @@ function App() {
           <div>
             <h4 className="footer-title">Explore</h4>
             <ul className="footer-links">
-              <li><a href="#movies" onClick={(e) => { e.preventDefault(); navigateTo('movies'); }}>Movies</a></li>
+              <li><a href="#movies" onClick={(e) => { e.preventDefault(); navigateTo('movies'); }}>Events</a></li>
               <li><a href="#theatres" onClick={(e) => { e.preventDefault(); navigateTo('theatres'); }}>Theatres</a></li>
               <li><a href="#offers" onClick={(e) => { e.preventDefault(); navigateTo('home'); }}>Offers</a></li>
               <li><a href="#news" onClick={(e) => { e.preventDefault(); navigateTo('home'); }}>News & Events</a></li>
@@ -237,3 +358,4 @@ function App() {
 }
 
 export default App;
+
