@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 
-const Login = ({ navigateTo, setUser }) => {
+const Register = ({ navigateTo, setUser }) => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simulate user login
     setUser({
-      name: email.split('@')[0],
+      name: name,
       email: email
     });
     navigateTo('home');
@@ -17,10 +17,23 @@ const Login = ({ navigateTo, setUser }) => {
   return (
     <div className="placeholder-page">
       <div className="glass-panel" style={{ padding: '3rem 2.5rem', width: '100%', maxWidth: '420px', textAlign: 'left' }}>
-        <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem', color: 'var(--text-bright)' }}>Welcome Back</h2>
-        <p style={{ fontSize: '0.9rem', marginBottom: '2rem', color: 'var(--text-muted)' }}>Sign in to book tickets, manage reservations, and earn points.</p>
+        <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem', color: 'var(--text-bright)' }}>Join CinePass</h2>
+        <p style={{ fontSize: '0.9rem', marginBottom: '2rem', color: 'var(--text-muted)' }}>Get early access to movie tickets, deals, and points.</p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>Full Name</label>
+            <input 
+              type="text" 
+              className="search-input" 
+              placeholder="John Doe" 
+              style={{ paddingLeft: '1rem' }} 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required 
+            />
+          </div>
+
           <div>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>Email Address</label>
             <input 
@@ -48,14 +61,14 @@ const Login = ({ navigateTo, setUser }) => {
           </div>
 
           <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem', padding: '0.75rem' }}>
-            Sign In
+            Create Account
           </button>
         </form>
 
         <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-          Don't have an account?{' '}
-          <a href="#register" onClick={(e) => { e.preventDefault(); navigateTo('register'); }} style={{ fontWeight: '600' }}>
-            Sign Up
+          Already have an account?{' '}
+          <a href="#login" onClick={(e) => { e.preventDefault(); navigateTo('login'); }} style={{ fontWeight: '600' }}>
+            Sign In
           </a>
         </div>
       </div>
@@ -63,4 +76,4 @@ const Login = ({ navigateTo, setUser }) => {
   );
 };
 
-export default Login;
+export default Register;
