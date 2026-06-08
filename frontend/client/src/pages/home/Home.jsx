@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { mockMovies, mockOffers } from '../../data/moviesData';
+import EventCard from '../../components/events/EventCard';
+import EventFilter from '../../components/events/EventFilter';
 
 const Home = ({ navigateTo, activeCity, onSelectEvent }) => {
   const [activeTab, setActiveTab] = useState('showing'); // 'showing', 'coming_soon', 'trending'
@@ -7,7 +9,19 @@ const Home = ({ navigateTo, activeCity, onSelectEvent }) => {
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [selectedMovie, setSelectedMovie] = useState(null); // Movie object for trailer modal
 
-  const genres = ['All', 'Sci-Fi', 'Cyberpunk', 'Fantasy', 'Action'];
+  const filterTabs = [
+    { value: 'showing', label: 'Now Showing' },
+    { value: 'coming_soon', label: 'Coming Soon' },
+    { value: 'trending', label: 'Trending' }
+  ];
+
+  const genreOptions = [
+    { value: 'All', label: 'All Genres' },
+    { value: 'Sci-Fi', label: 'Sci-Fi' },
+    { value: 'Cyberpunk', label: 'Cyberpunk' },
+    { value: 'Fantasy', label: 'Fantasy' },
+    { value: 'Action', label: 'Action' }
+  ];
 
   // Filter movies based on category, search, and genre
   const filteredMovies = useMemo(() => {
@@ -88,7 +102,7 @@ const Home = ({ navigateTo, activeCity, onSelectEvent }) => {
           </div>
           <p className="hero-description">{spotlightMovie.description}</p>
           <div className="hero-buttons">
-            <button className="btn-primary" onClick={() => handleBookNow(spotlightMovie)}>
+            <button className="btn-primary" onClick={() => handleBookNow(spotlightMovie)} style={{ cursor: 'pointer' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <rect width="20" height="12" x="2" y="6" rx="2" />
                 <path d="M12 12h.01" />
@@ -97,7 +111,7 @@ const Home = ({ navigateTo, activeCity, onSelectEvent }) => {
               </svg>
               Book Tickets
             </button>
-            <button className="btn-outline" onClick={() => setSelectedMovie(spotlightMovie)}>
+            <button className="btn-outline" onClick={() => setSelectedMovie(spotlightMovie)} style={{ cursor: 'pointer' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polygon points="5 3 19 12 5 21 5 3" />
               </svg>
@@ -107,89 +121,29 @@ const Home = ({ navigateTo, activeCity, onSelectEvent }) => {
         </div>
       </section>
 
-      {/* Toolbar Filter Section */}
-      <section className="filter-toolbar">
-        <div className="category-tabs">
-          <button 
-            className={`tab-btn ${activeTab === 'showing' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('showing'); setSelectedGenre('All'); }}
-          >
-            Now Showing
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'coming_soon' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('coming_soon'); setSelectedGenre('All'); }}
-          >
-            Coming Soon
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'trending' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('trending'); setSelectedGenre('All'); }}
-          >
-            Trending
-          </button>
-        </div>
-
-        <div className="search-filter-box">
-          <div className="search-input-wrapper">
-            <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" x2="16.65" y1="21" y2="16.65" />
-            </svg>
-            <input 
-              type="text" 
-              className="search-input" 
-              placeholder="Search movies by title..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <select 
-            className="genre-select" 
-            value={selectedGenre}
-            onChange={(e) => setSelectedGenre(e.target.value)}
-          >
-            {genres.map(genre => (
-              <option key={genre} value={genre}>{genre}</option>
-            ))}
-          </select>
-        </div>
-      </section>
+      {/* Filter and Search controls */}
+      <EventFilter 
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        tabs={filterTabs}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        dropdownValue={selectedGenre}
+        setDropdownValue={setSelectedGenre}
+        dropdownOptions={genreOptions}
+        placeholder="Search movies by title..."
+      />
 
       {/* Movie Cards Grid */}
       <section style={{ position: 'relative' }}>
         {filteredMovies.length > 0 ? (
           <div className="movie-grid">
             {filteredMovies.map(movie => (
-              <div className="movie-card" key={movie.id} style={{ cursor: 'pointer' }} onClick={() => handleBookNow(movie)}>
-                <div className="poster-wrapper">
-                  <img src={movie.poster} alt={movie.title} className="movie-poster" />
-                  <div className="poster-overlay" onClick={(e) => e.stopPropagation()}>
-                    <button className="btn-primary" style={{ width: '80%', justifyContent: 'center' }} onClick={() => handleBookNow(movie)}>
-                      Details & Book
-                    </button>
-                    <button className="btn-outline" style={{ width: '80%', background: 'rgba(255,255,255,0.1)' }} onClick={() => setSelectedMovie(movie)}>
-                      Trailer
-                    </button>
-                  </div>
-                  <span className="card-rating-badge">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                    {movie.rating}
-                  </span>
-                </div>
-                
-                <div className="movie-info">
-                  <h3 className="movie-card-title">{movie.title}</h3>
-                  <div className="movie-card-genres">{movie.genre}</div>
-                  <div className="movie-card-footer">
-                    <span className="movie-card-date">{movie.releaseDate}</span>
-                    <span className="movie-card-format">{movie.format}</span>
-                  </div>
-                </div>
-              </div>
+              <EventCard 
+                key={movie.id}
+                event={movie}
+                onClick={handleBookNow}
+              />
             ))}
           </div>
         ) : (

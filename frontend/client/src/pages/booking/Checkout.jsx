@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import Loader from '../../components/common/Loader';
 
-const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, onPaymentSuccess }) => {
+const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, triggerToast, onPaymentSuccess }) => {
   if (!selectedEvent || !selectedShowtime || !selectedSeats || selectedSeats.length === 0) {
     return (
       <div className="placeholder-page">
@@ -36,9 +37,11 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
       const rate = promoCode.toUpperCase() === 'CINEPASS20' ? 0.20 : 0.10;
       setDiscount(basePrice * rate);
       setPromoStatus('valid');
+      triggerToast('Coupon discount applied!', 'success');
     } else {
       setDiscount(0);
       setPromoStatus('invalid');
+      triggerToast('Invalid promo code code', 'error');
     }
   };
 
@@ -67,12 +70,25 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
     }, 1200);
   };
 
+  const getLoaderText = () => {
+    switch (processingStep) {
+      case 1:
+        return 'Authorizing Credit Card...';
+      case 2:
+        return 'Reserving Seat Allocations...';
+      case 3:
+        return 'Finalizing Ticket Purchase!';
+      default:
+        return 'Verifying Transaction...';
+    }
+  };
+
   return (
     <div style={{ padding: '3rem 0', textAlign: 'left' }}>
       <button 
         className="btn-outline" 
         onClick={() => navigateTo('seat-selection')} 
-        style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+        style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <line x1="19" x2="5" y1="12" y2="12" />
@@ -84,31 +100,8 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
       <h1 style={{ fontSize: '2.5rem', marginBottom: '2rem' }}>Checkout Details</h1>
 
       {isProcessing ? (
-        <div className="glass-panel" style={{ padding: '4rem 2rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
-            {/* Spinning Indicator */}
-            <div style={{
-              width: '4rem',
-              height: '4rem',
-              borderRadius: '50%',
-              border: '4px solid var(--border-color)',
-              borderTopColor: 'var(--primary)',
-              animation: 'spin 1s linear infinite'
-            }} />
-          </div>
-          <style>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-          
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>
-            {processingStep === 1 && 'Authorizing Credit Card...'}
-            {processingStep === 2 && 'Reserving Seat Allocations...'}
-            {processingStep === 3 && 'Finalizing Ticket Purchase!'}
-          </h2>
-          <p style={{ color: 'var(--text-muted)' }}>Do not close this window or click refresh.</p>
+        <div className="glass-panel" style={{ maxWidth: '600px', margin: '0 auto', border: '1px solid var(--border-color)', borderRadius: '16px', overflow: 'hidden' }}>
+          <Loader text={getLoaderText()} />
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '2.5rem' }}>
@@ -199,7 +192,7 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
                   </span>
                 </div>
 
-                <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.8rem', fontSize: '1rem', marginTop: '0.5rem' }}>
+                <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.8rem', fontSize: '1rem', marginTop: '0.5rem', cursor: 'pointer' }}>
                   Authorize & Pay ${(grandTotal).toFixed(2)}
                 </button>
               </form>
@@ -261,7 +254,7 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
                   type="button" 
                   className="btn-outline" 
                   onClick={applyPromoCode}
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                  style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', cursor: 'pointer' }}
                 >
                   Apply
                 </button>

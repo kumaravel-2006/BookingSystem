@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import SeatMap from '../../components/seat/SeatMap';
+import SeatLegend from '../../components/seat/SeatLegend';
 
 const SeatSelection = ({ navigateTo, selectedEvent, selectedShowtime, onConfirmSeats }) => {
   if (!selectedEvent || !selectedShowtime) {
@@ -10,17 +12,13 @@ const SeatSelection = ({ navigateTo, selectedEvent, selectedShowtime, onConfirmS
     );
   }
 
-  // Define rows and columns
-  const rows = ['A', 'B', 'C', 'D', 'E', 'F'];
-  const cols = [1, 2, 3, 4, 5, 6, 7, 8];
-
   // Static list of mock reserved seats
   const reservedSeats = ['A3', 'A4', 'C5', 'D1', 'D2', 'F6', 'F7'];
 
   const [selectedSeats, setSelectedSeats] = useState([]);
 
   const handleSeatClick = (seatId) => {
-    if (reservedSeats.includes(seatId)) return; // Ignore click on reserved seats
+    if (reservedSeats.includes(seatId)) return;
 
     if (selectedSeats.includes(seatId)) {
       setSelectedSeats(selectedSeats.filter(s => s !== seatId));
@@ -42,7 +40,7 @@ const SeatSelection = ({ navigateTo, selectedEvent, selectedShowtime, onConfirmS
           <button 
             className="btn-outline" 
             onClick={() => navigateTo('event-details')} 
-            style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+            style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="19" x2="5" y1="12" y2="12" />
@@ -76,76 +74,15 @@ const SeatSelection = ({ navigateTo, selectedEvent, selectedShowtime, onConfirmS
           </div>
         </div>
 
-        {/* Seats Grid */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', width: '100%', overflowX: 'auto', paddingBottom: '1rem' }}>
-          {rows.map(row => (
-            <div key={row} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.8rem', minWidth: '400px' }}>
-              <strong style={{ width: '20px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{row}</strong>
-              {cols.map(col => {
-                const seatId = `${row}${col}`;
-                const isReserved = reservedSeats.includes(seatId);
-                const isSelected = selectedSeats.includes(seatId);
+        {/* Modular Seats Seating Grid */}
+        <SeatMap 
+          selectedSeats={selectedSeats}
+          reservedSeats={reservedSeats}
+          handleSeatClick={handleSeatClick}
+        />
 
-                let seatBg = 'var(--bg-main)';
-                let seatBorder = '1px solid var(--border-color)';
-                let seatColor = 'var(--text-main)';
-
-                if (isReserved) {
-                  seatBg = 'rgba(239, 68, 68, 0.15)';
-                  seatBorder = '1px solid rgba(239, 68, 68, 0.3)';
-                  seatColor = 'rgba(239, 68, 68, 0.4)';
-                } else if (isSelected) {
-                  seatBg = 'var(--primary)';
-                  seatBorder = '1px solid var(--primary-hover)';
-                  seatColor = 'var(--bg-main)';
-                }
-
-                return (
-                  <button
-                    key={col}
-                    onClick={() => handleSeatClick(seatId)}
-                    disabled={isReserved}
-                    title={isReserved ? 'Reserved' : `Seat ${seatId}`}
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '6px',
-                      background: seatBg,
-                      border: seatBorder,
-                      color: seatColor,
-                      fontSize: '0.75rem',
-                      fontWeight: '700',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      cursor: isReserved ? 'not-allowed' : 'pointer',
-                      transform: isSelected ? 'scale(1.1)' : 'scale(1)'
-                    }}
-                  >
-                    {col}
-                  </button>
-                );
-              })}
-              <strong style={{ width: '20px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{row}</strong>
-            </div>
-          ))}
-        </div>
-
-        {/* Seats Legend */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '3rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-            <span style={{ width: '18px', height: '18px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-main)' }} />
-            <span style={{ color: 'var(--text-muted)' }}>Available</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-            <span style={{ width: '18px', height: '18px', borderRadius: '4px', background: 'var(--primary)' }} />
-            <span style={{ color: 'var(--text-muted)' }}>Selected</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-            <span style={{ width: '18px', height: '18px', borderRadius: '4px', border: '1px solid rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.15)' }} />
-            <span style={{ color: 'var(--text-muted)' }}>Reserved</span>
-          </div>
-        </div>
+        {/* Seating Legend Key */}
+        <SeatLegend />
 
       </div>
 
