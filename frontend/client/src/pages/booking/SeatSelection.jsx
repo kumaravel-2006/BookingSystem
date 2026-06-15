@@ -1,45 +1,53 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SeatMap from '../../components/seat/SeatMap';
 import SeatLegend from '../../components/seat/SeatLegend';
+import { useParams, useNavigate } from 'react-router-dom'
+import { eventService } from '../../services/eventService'
+import { useBookingStore } from '../../store/bookingSlice'
+import { useBooking } from '../../hooks/useBooking'
 
-const SeatSelection = ({ navigateTo, selectedEvent, selectedShowtime, onConfirmSeats }) => {
-  if (!selectedEvent || !selectedShowtime) {
-    return (
-      <div className="placeholder-page">
-        <h2>No Active Selection</h2>
-        <button className="btn-primary" onClick={() => navigateTo('home')}>Go to Home</button>
-      </div>
-    );
+const SeatSelection = () => {
+  const { id: eventId } = useParams()
+  const navigate = useNavigate()
+  const { selectedSeats, addSeat, removeSeat, clearSeats, setLock } = useBookingStore()
+  const { lockSeats, loading } = useBooking()
+  const [seatMap, setSeatMap] = useState([])
+  const [seatLoading, setSeatLoading] = useState(true)
+
+  useEffect(() => {
+    clearSeats()
+    eventService.getSeatMap(eventId)
+      .then(setSeatMap)
+      .finally(() => setSeatLoading(false))
+  }, [eventId])
+
+  const handleSeatClick = (seat) => {
+    if (seat.status === 'BOOKED' || seat.status === 'LOCKED') return
+    if (selectedSeats.some(s => s.id === seat.id)) {
+      removeSeat(seat.id)
+    } else {
+      addSeat(seat)
+    }
   }
 
-  // Static list of mock reserved seats
-  const reservedSeats = ['A3', 'A4', 'C5', 'D1', 'D2', 'F6', 'F7'];
-
-  const [selectedSeats, setSelectedSeats] = useState([]);
-
-  const handleSeatClick = (seatId) => {
-    if (reservedSeats.includes(seatId)) return;
-
-    if (selectedSeats.includes(seatId)) {
-      setSelectedSeats(selectedSeats.filter(s => s !== seatId));
-    } else {
-      setSelectedSeats([...selectedSeats, seatId]);
+  const handleProceedToCheckout = async () => {
+    const seatIds = selectedSeats.map(s => s.id)
+    const result = await lockSeats(eventId, seatIds)
+    if (result) {
+      setLock(result.bookingId, result.expiresAt)
+      navigate('/checkout')
     }
-  };
-
-  const handleProceedToCheckout = () => {
-    onConfirmSeats(selectedSeats);
-    navigateTo('checkout');
-  };
+  }
+  if (seatLoading) return <div>Loading seats...</div>
 
   return (
     <div style={{ padding: '3rem 0', textAlign: 'center' }}>
       {/* Header Info */}
       <div style={{ textAlign: 'left', marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <button 
-            className="btn-outline" 
-            onClick={() => navigateTo('event-details')} 
+          <button
+            className="btn-outline"
+            onClick={() => navigate(`/events/${eventId}`)}
             style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -50,17 +58,17 @@ const SeatSelection = ({ navigateTo, selectedEvent, selectedShowtime, onConfirmS
           </button>
           <h1 style={{ fontSize: '2rem', margin: 0 }}>Choose Your Seats</h1>
           <p style={{ color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>
-            {selectedEvent.title} &bull; {selectedShowtime.date} at {selectedShowtime.time}
+            Select your seats below
           </p>
         </div>
-        
+
         <div className="glass-panel" style={{ padding: '0.75rem 1.25rem', fontSize: '0.9rem' }}>
           Venue: <strong style={{ color: 'var(--text-bright)' }}>Grand Regal Cinemas, Screen 4</strong>
         </div>
       </div>
 
       <div className="glass-panel" style={{ padding: '3rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
-        
+
         {/* Screen simulator */}
         <div style={{ width: '80%', maxWidth: '500px', marginBottom: '4rem', position: 'relative' }}>
           <div style={{
@@ -75,9 +83,9 @@ const SeatSelection = ({ navigateTo, selectedEvent, selectedShowtime, onConfirmS
         </div>
 
         {/* Modular Seats Seating Grid */}
-        <SeatMap 
+        <SeatMap
+          seatMap={seatMap}
           selectedSeats={selectedSeats}
-          reservedSeats={reservedSeats}
           handleSeatClick={handleSeatClick}
         />
 
@@ -91,7 +99,8 @@ const SeatSelection = ({ navigateTo, selectedEvent, selectedShowtime, onConfirmS
         <div style={{ textAlign: 'left' }}>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Selected Seats</span>
           <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-bright)', margin: '0.25rem 0' }}>
-            {selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}
+            {selectedSeats.length > 0 ? selectedSeats.map(s => s.id).join(', ')
+              : 'None'}
           </div>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             Ticket Count: <strong>{selectedSeats.length}</strong>
@@ -102,7 +111,7 @@ const SeatSelection = ({ navigateTo, selectedEvent, selectedShowtime, onConfirmS
           <div style={{ textAlign: 'right' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Subtotal Price</span>
             <div style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--text-bright)' }}>
-              ${(selectedEvent.ticketPrice * selectedSeats.length).toFixed(2)}
+              ${selectedSeats.reduce((total, seat) => total + (seat.price ?? 0), 0).toFixed(2)}
             </div>
           </div>
 
@@ -110,8 +119,8 @@ const SeatSelection = ({ navigateTo, selectedEvent, selectedShowtime, onConfirmS
             onClick={handleProceedToCheckout}
             disabled={selectedSeats.length === 0}
             className="btn-primary"
-            style={{ 
-              padding: '0.8rem 2rem', 
+            style={{
+              padding: '0.8rem 2rem',
               fontSize: '1rem',
               opacity: selectedSeats.length === 0 ? 0.5 : 1,
               cursor: selectedSeats.length === 0 ? 'not-allowed' : 'pointer'

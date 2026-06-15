@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-const Footer = ({ navigateTo }) => {
+const Footer = () => {
   const handleSubscribe = (e) => {
     e.preventDefault();
     alert('Subscribed successfully to the CinePass Newsletter!');
@@ -25,10 +26,9 @@ const Footer = ({ navigateTo }) => {
         <div>
           <h4 className="footer-title">Explore</h4>
           <ul className="footer-links">
-            <li><a href="#movies" onClick={(e) => { e.preventDefault(); navigateTo('movies'); }}>Events</a></li>
-            <li><a href="#theatres" onClick={(e) => { e.preventDefault(); navigateTo('theatres'); }}>Theatres</a></li>
-            <li><a href="#offers" onClick={(e) => { e.preventDefault(); navigateTo('home'); }}>Offers</a></li>
-            <li><a href="#news" onClick={(e) => { e.preventDefault(); navigateTo('home'); }}>News & Events</a></li>
+            <li><Link to="/events">Events</Link></li>
+            <li><Link to="/">Offers</Link></li>
+            <li><Link to="/">News & Events</Link></li>
           </ul>
         </div>
         <div>

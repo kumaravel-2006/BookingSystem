@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../context/AuthContext.jsx'
+import { useNavigate } from 'react-router-dom'
 
-const Login = ({ navigateTo, setUser }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Simulate user login
-    setUser({
-      name: email.split('@')[0],
-      email: email
-    });
-    navigateTo('home');
-  };
+const Login = () => {
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  const { login } = useAuth()
+  const navigate = useNavigate()
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      await login(email, password)
+      navigate('/')
+    } catch (err) {
+      alert('Login failed. Check your credentials.')
+    }
+  }
 
   return (
     <div className="placeholder-page">
@@ -23,27 +30,27 @@ const Login = ({ navigateTo, setUser }) => {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>Email Address</label>
-            <input 
-              type="email" 
-              className="search-input" 
-              placeholder="name@example.com" 
-              style={{ paddingLeft: '1rem' }} 
+            <input
+              type="email"
+              className="search-input"
+              placeholder="name@example.com"
+              style={{ paddingLeft: '1rem' }}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required 
+              required
             />
           </div>
 
           <div>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>Password</label>
-            <input 
-              type="password" 
-              className="search-input" 
-              placeholder="••••••••" 
-              style={{ paddingLeft: '1rem' }} 
+            <input
+              type="password"
+              className="search-input"
+              placeholder="••••••••"
+              style={{ paddingLeft: '1rem' }}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required 
+              required
             />
           </div>
 
@@ -55,12 +62,12 @@ const Login = ({ navigateTo, setUser }) => {
         <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <div>
             Don't have an account?{' '}
-            <a href="#register" onClick={(e) => { e.preventDefault(); navigateTo('register'); }} style={{ fontWeight: '600' }}>
+            <a href="#register" onClick={(e) => { e.preventDefault(); navigate('/register'); }} style={{ fontWeight: '600' }}>
               Sign Up
             </a>
           </div>
           <div>
-            <a href="#forgot-password" onClick={(e) => { e.preventDefault(); navigateTo('forgot-password'); }} style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+            <a href="#forgot-password" onClick={(e) => { e.preventDefault(); navigate('/forgot-password'); }} style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
               Forgot Password?
             </a>
           </div>

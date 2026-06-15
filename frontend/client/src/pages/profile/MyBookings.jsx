@@ -1,79 +1,55 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { bookingService } from '../../services/bookingService'
+import { useAuth } from '../../hooks/useAuth'
+import { formatCurrency } from '../../utils/formatUtils'
 
-const MyBookings = ({ navigateTo, user, setUser, sessionBookings, onCancelSessionBooking }) => {
-  const activeUser = user || { name: 'Guest User', email: 'guest@cinepass.com' };
+const MyBookings = () => {
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+  const [bookings, setBookings] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selectedTicket, setSelectedTicket] = useState(null)
 
-  // Static list of initial mock bookings
-  const [staticBookings, setStaticBookings] = useState([
-    {
-      id: 'BK-8902',
-      movieTitle: 'Dune: Part Two',
-      theatre: 'Grand Regal Cinemas',
-      date: 'June 10, 2026',
-      time: '07:30 PM',
-      seats: 'G12, G13',
-      price: 29.98,
-      status: 'upcoming'
-    },
-    {
-      id: 'BK-5412',
-      movieTitle: 'Spider-Man: Beyond the Spider-Verse',
-      theatre: 'Cineplex Max 3D',
-      date: 'May 20, 2026',
-      time: '04:15 PM',
-      seats: 'D5, D6, D7',
-      price: 43.50,
-      status: 'completed'
-    }
-  ]);
-
-  const [selectedTicket, setSelectedTicket] = useState(null); // Ticket object for QR modal
+  useEffect(() => {
+    bookingService.getMyBookings()
+      .then(setBookings)
+      .catch((err) => console.error('Failed to load bookings', err))
+      .finally(() => setLoading(false))
+  }, [])
 
   const handleLogout = () => {
-    setUser(null);
-    navigateTo('home');
-  };
+    logout()
+    navigate('/')
+  }
 
-  const handleCancelStaticBooking = (id) => {
-    if (window.confirm('Are you sure you want to cancel this booking reservation? A refund will be issued to your card.')) {
-      setStaticBookings(staticBookings.map(b => b.id === id ? { ...b, status: 'cancelled' } : b));
+  const handleCancel = async (id) => {
+    if (!window.confirm('Are you sure you want to cancel this booking? A refund will be issued to your card.')) return
+    try {
+      await bookingService.cancelBooking(id)
+      setBookings((prev) =>
+        prev.map((b) => b.id === id ? { ...b, status: 'CANCELLED' } : b)
+      )
+    } catch (err) {
+      console.error('Failed to cancel booking')
     }
-  };
+  }
 
-  const handleCancelSession = (id) => {
-    if (window.confirm('Are you sure you want to cancel this booking reservation? A refund will be issued to your card.')) {
-      onCancelSessionBooking(id);
-    }
-  };
-
-  // Combine static mock bookings and new session bookings
-  const allBookings = [
-    ...sessionBookings.map(sb => ({
-      id: sb.bookingId,
-      movieTitle: sb.movieTitle,
-      theatre: 'Grand Regal Cinemas',
-      date: sb.date,
-      time: sb.time,
-      seats: sb.seats.join(', '),
-      price: sb.totalPaid,
-      status: sb.status || 'upcoming'
-    })),
-    ...staticBookings
-  ];
+  if (loading) return <div>Loading...</div>
 
   return (
     <div style={{ padding: '3rem 0', textAlign: 'left' }}>
       <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '3rem' }}>
-        
+
         {/* Left Column: Profile Card */}
         <div style={{ flex: '1 1 300px', maxWidth: '380px' }}>
           <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center' }}>
-            <div style={{ 
-              width: '5.5rem', 
-              height: '5.5rem', 
-              borderRadius: '50%', 
-              background: 'var(--primary-glow)', 
-              border: '2px solid var(--primary)', 
+            <div style={{
+              width: '5.5rem',
+              height: '5.5rem',
+              borderRadius: '50%',
+              background: 'var(--primary-glow)',
+              border: '2px solid var(--primary)',
               color: 'var(--primary-hover)',
               fontSize: '2.5rem',
               fontWeight: '700',
@@ -83,25 +59,11 @@ const MyBookings = ({ navigateTo, user, setUser, sessionBookings, onCancelSessio
               margin: '0 auto 1.5rem',
               boxShadow: '0 0 15px var(--primary-glow)'
             }}>
-              {activeUser.name.charAt(0).toUpperCase()}
+              {user?.name?.charAt(0).toUpperCase() ?? 'U'}
             </div>
-            
-            <h2 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-bright)', fontSize: '1.5rem' }}>{activeUser.name}</h2>
-            <p style={{ margin: '0 0 2rem 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{activeUser.email}</p>
 
-            <div style={{ borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', padding: '1.5rem 0', textAlign: 'left', marginBottom: '2rem' }}>
-              <h4 style={{ color: 'var(--text-bright)', marginBottom: '1rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Member Standing</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Status Level:</span>
-                  <span style={{ color: 'var(--secondary)', fontWeight: '700' }}>CinePass Gold</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Rewards Accrued:</span>
-                  <span style={{ color: 'var(--text-bright)', fontWeight: '700' }}>450 Points</span>
-                </div>
-              </div>
-            </div>
+            <h2 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-bright)', fontSize: '1.5rem' }}>{user?.name ?? 'User'}</h2>
+            <p style={{ margin: '0 0 2rem 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{user?.sub ?? ''}</p>
 
             <button className="btn-outline" onClick={handleLogout} style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -109,27 +71,26 @@ const MyBookings = ({ navigateTo, user, setUser, sessionBookings, onCancelSessio
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" x2="9" y1="12" y2="12" />
               </svg>
-              Sign Out Account
+              Sign Out
             </button>
           </div>
         </div>
 
-        {/* Right Column: Bookings History */}
+        {/* Right Column: Bookings */}
         <div style={{ flex: '2 2 500px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ marginBottom: '1rem' }}>
-            <h1 style={{ fontSize: '2rem', margin: 0 }}>Active Tickets & History</h1>
-            <p style={{ color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>Manage upcoming reservations, download wallet passes, or cancel schedules.</p>
+            <h1 style={{ fontSize: '2rem', margin: 0 }}>My Bookings</h1>
+            <p style={{ color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>Manage your tickets and reservations.</p>
           </div>
 
-          {allBookings.length > 0 ? (
+          {bookings.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {allBookings.map((b) => (
-                <div key={b.id} className="glass-panel" style={{ 
-                  padding: '1.5rem', 
-                  borderLeft: `4px solid ${
-                    b.status === 'upcoming' ? 'var(--secondary)' : 
-                    b.status === 'cancelled' ? '#f87171' : 'var(--text-muted)'
-                  }`,
+              {bookings.map((b) => (
+                <div key={b.id} className="glass-panel" style={{
+                  padding: '1.5rem',
+                  borderLeft: `4px solid ${b.status === 'CONFIRMED' ? 'var(--secondary)' :
+                      b.status === 'CANCELLED' ? '#f87171' : 'var(--text-muted)'
+                    }`,
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
@@ -138,61 +99,43 @@ const MyBookings = ({ navigateTo, user, setUser, sessionBookings, onCancelSessio
                 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                      <h3 style={{ margin: 0, color: 'var(--text-bright)' }}>{b.movieTitle}</h3>
-                      <span style={{ 
-                        fontSize: '0.7rem', 
-                        textTransform: 'uppercase', 
-                        fontWeight: '700', 
-                        padding: '0.2rem 0.5rem', 
+                      <h3 style={{ margin: 0, color: 'var(--text-bright)' }}>{b.eventTitle}</h3>
+                      <span style={{
+                        fontSize: '0.7rem',
+                        textTransform: 'uppercase',
+                        fontWeight: '700',
+                        padding: '0.2rem 0.5rem',
                         borderRadius: '4px',
-                        background: 
-                          b.status === 'upcoming' ? 'var(--secondary-glow)' : 
-                          b.status === 'cancelled' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)',
-                        color: 
-                          b.status === 'upcoming' ? 'var(--secondary)' : 
-                          b.status === 'cancelled' ? '#f87171' : 'var(--text-muted)',
-                        border: `1px solid ${
-                          b.status === 'upcoming' ? 'var(--secondary)' : 
-                          b.status === 'cancelled' ? '#ef4444' : 'var(--border-color)'
-                        }`
+                        background: b.status === 'CONFIRMED' ? 'var(--secondary-glow)' : 'rgba(239, 68, 68, 0.1)',
+                        color: b.status === 'CONFIRMED' ? 'var(--secondary)' : '#f87171',
+                        border: `1px solid ${b.status === 'CONFIRMED' ? 'var(--secondary)' : '#ef4444'}`
                       }}>{b.status}</span>
                     </div>
-                    
-                    <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: 'var(--text-main)' }}>{b.theatre}</p>
+
                     <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.825rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
-                      <span>Date: <strong style={{ color: 'var(--text-main)' }}>{b.date}</strong></span>
-                      <span>Time: <strong style={{ color: 'var(--text-main)' }}>{b.time}</strong></span>
-                      <span>Seats: <strong style={{ color: 'var(--primary-hover)' }}>{b.seats}</strong></span>
+                      <span>Seats: <strong style={{ color: 'var(--primary-hover)' }}>{b.seats?.join(', ')}</strong></span>
+                      <span>Amount: <strong style={{ color: 'var(--text-bright)' }}>{formatCurrency(b.totalAmount)}</strong></span>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.75rem' }}>
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Booking ID: {b.id}</span>
-                      <span style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-bright)' }}>${Number(b.price).toFixed(2)}</span>
-                    </div>
-                    
-                    {b.status === 'upcoming' && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {b.id}</span>
+
+                    {b.status === 'CONFIRMED' && (
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button 
-                          className="btn-outline" 
-                          onClick={() => {
-                            if (b.id.startsWith('CP-')) {
-                              handleCancelSession(b.id);
-                            } else {
-                              handleCancelStaticBooking(b.id);
-                            }
-                          }}
-                          style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.75rem', color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                        <button
+                          className="btn-outline"
+                          onClick={() => handleCancel(b.id)}
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                         >
-                          Cancel Booking
+                          Cancel
                         </button>
-                        <button 
-                          className="btn-primary" 
-                          onClick={() => setSelectedTicket(b)} 
-                          style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.75rem' }}
+                        <button
+                          className="btn-primary"
+                          onClick={() => setSelectedTicket(b)}
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
                         >
-                          View Pass QR
+                          View QR
                         </button>
                       </div>
                     )}
@@ -202,23 +145,17 @@ const MyBookings = ({ navigateTo, user, setUser, sessionBookings, onCancelSessio
             </div>
           ) : (
             <div className="glass-panel" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--primary)', marginBottom: '1rem', opacity: 0.8 }}>
-                <rect width="20" height="12" x="2" y="6" rx="2" />
-                <path d="M12 12h.01" />
-                <path d="M17 12h.01" />
-                <path d="M7 12h.01" />
-              </svg>
-              <h3>No Tickets Booked Yet</h3>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Your purchased tickets and receipts will be stored here.</p>
-              <button className="btn-primary" onClick={() => navigateTo('home')} style={{ margin: '0 auto' }}>
-                Browse Movies
+              <h3>No Bookings Yet</h3>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Your booked tickets will appear here.</p>
+              <button className="btn-primary" onClick={() => navigate('/')} style={{ margin: '0 auto' }}>
+                Browse Events
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Ticket Pass Modal */}
+      {/* QR Modal */}
       {selectedTicket && (
         <div className="modal-overlay" onClick={() => setSelectedTicket(null)}>
           <div className="modal-content" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
@@ -228,67 +165,39 @@ const MyBookings = ({ navigateTo, user, setUser, sessionBookings, onCancelSessio
                 <line x1="6" x2="18" y1="6" y2="18" />
               </svg>
             </button>
-
-            <div style={{ padding: '2.5rem', textAlign: 'center', background: 'linear-gradient(135deg, var(--bg-surface) 0%, rgba(30, 30, 45, 0.9) 100%)' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.1em' }}>Digital Cinema Pass</span>
-              <h2 style={{ fontSize: '1.5rem', margin: '0.5rem 0 1.5rem 0', color: 'var(--text-bright)' }}>{selectedTicket.movieTitle}</h2>
-
-              {/* QR Code Container */}
-              <div style={{ background: '#ffffff', padding: '1rem', borderRadius: '12px', display: 'inline-block', marginBottom: '1.5rem', boxShadow: 'var(--shadow-md)' }}>
-                <svg width="120" height="120" viewBox="0 0 100 100" style={{ shapeRendering: 'crispEdges' }}>
-                  <rect x="0" y="0" width="100" height="100" fill="#ffffff" />
-                  <rect x="5" y="5" width="25" height="25" fill="#09090e" />
-                  <rect x="10" y="10" width="15" height="15" fill="#ffffff" />
-                  <rect x="15" y="15" width="5" height="5" fill="#09090e" />
-                  
-                  <rect x="70" y="5" width="25" height="25" fill="#09090e" />
-                  <rect x="75" y="10" width="15" height="15" fill="#ffffff" />
-                  <rect x="80" y="15" width="5" height="5" fill="#09090e" />
-
-                  <rect x="5" y="70" width="25" height="25" fill="#09090e" />
-                  <rect x="10" y="75" width="15" height="15" fill="#ffffff" />
-                  <rect x="15" y="80" width="5" height="5" fill="#09090e" />
-
-                  <rect x="75" y="75" width="10" height="10" fill="#09090e" />
-                  <rect x="78" y="78" width="4" height="4" fill="#ffffff" />
-
-                  <rect x="35" y="10" width="5" height="15" fill="#09090e" />
-                  <rect x="45" y="5" width="10" height="5" fill="#09090e" />
-                  <rect x="40" y="25" width="15" height="5" fill="#09090e" />
-                  
-                  <rect x="10" y="35" width="15" height="5" fill="#09090e" />
-                  <rect x="5" y="45" width="5" height="10" fill="#09090e" />
-                  <rect x="20" y="50" width="10" height="5" fill="#09090e" />
-                  
-                  <rect x="35" y="35" width="30" height="30" fill="#09090e" />
-                  <rect x="40" y="40" width="10" height="10" fill="#ffffff" />
-                  <rect x="45" y="55" width="10" height="5" fill="#ffffff" />
-                  
-                  <rect x="75" y="35" width="15" height="5" fill="#09090e" />
-                  <rect x="70" y="45" width="5" height="15" fill="#09090e" />
-                  <rect x="85" y="55" width="10" height="10" fill="#09090e" />
-
-                  <rect x="35" y="75" width="15" height="5" fill="#09090e" />
-                  <rect x="40" y="85" width="5" height="10" fill="#09090e" />
-                </svg>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem' }}>
-                <div>Theater: <strong style={{ color: 'var(--text-bright)' }}>{selectedTicket.theatre}</strong></div>
-                <div>Showtime: <strong style={{ color: 'var(--text-bright)' }}>{selectedTicket.date} &bull; {selectedTicket.time}</strong></div>
-                <div>Allocated Seats: <strong style={{ color: 'var(--secondary)' }}>{selectedTicket.seats}</strong></div>
-                <div>Ticket ID: <strong style={{ color: 'var(--text-bright)' }}>{selectedTicket.id}</strong></div>
-              </div>
-
-              <button className="btn-primary" onClick={() => setSelectedTicket(null)} style={{ width: '100%', justifyContent: 'center', marginTop: '1.5rem' }}>
-                Close Ticket View
+            <div style={{ padding: '2.5rem', textAlign: 'center' }}>
+              <h2 style={{ color: 'var(--text-bright)', marginBottom: '1.5rem' }}>{selectedTicket.eventTitle}</h2>
+              {selectedTicket.qrCode ? (
+                <img src={selectedTicket.qrCode} alt="QR" style={{ width: '120px', height: '120px', marginBottom: '1rem' }} />
+              ) : (
+                <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', display: 'inline-block', marginBottom: '1rem' }}>
+                  <svg width="120" height="120" viewBox="0 0 100 100" style={{ shapeRendering: 'crispEdges' }}>
+                    <rect x="0" y="0" width="100" height="100" fill="#ffffff" />
+                    <rect x="5" y="5" width="25" height="25" fill="#09090e" />
+                    <rect x="10" y="10" width="15" height="15" fill="#ffffff" />
+                    <rect x="15" y="15" width="5" height="5" fill="#09090e" />
+                    <rect x="70" y="5" width="25" height="25" fill="#09090e" />
+                    <rect x="75" y="10" width="15" height="15" fill="#ffffff" />
+                    <rect x="80" y="15" width="5" height="5" fill="#09090e" />
+                    <rect x="5" y="70" width="25" height="25" fill="#09090e" />
+                    <rect x="10" y="75" width="15" height="15" fill="#ffffff" />
+                    <rect x="15" y="80" width="5" height="5" fill="#09090e" />
+                    <rect x="35" y="35" width="30" height="30" fill="#09090e" />
+                    <rect x="40" y="40" width="10" height="10" fill="#ffffff" />
+                  </svg>
+                </div>
+              )}
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Booking ID: {selectedTicket.id}</p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Seats: {selectedTicket.seats?.join(', ')}</p>
+              <button className="btn-primary" onClick={() => setSelectedTicket(null)} style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
+                Close
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default MyBookings;
+export default MyBookings

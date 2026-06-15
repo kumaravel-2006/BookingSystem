@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { mockMovies, mockOffers } from '../../data/moviesData';
 import EventCard from '../../components/events/EventCard';
 import EventFilter from '../../components/events/EventFilter';
+
+const mockMovies = [];
+const mockOffers = [];
 
 const Home = ({ navigateTo, activeCity, onSelectEvent }) => {
   const [activeTab, setActiveTab] = useState('showing'); // 'showing', 'coming_soon', 'trending'
@@ -72,54 +74,70 @@ const Home = ({ navigateTo, activeCity, onSelectEvent }) => {
   return (
     <div>
       {/* Featured Hero Banner */}
-      <section className="hero-spotlight">
-        <div 
-          className="hero-bg" 
-          style={{ backgroundImage: `url('/hero_movie.png')` }}
-        />
-        <div className="hero-overlay" />
-        <div className="hero-content">
-          <div className="hero-badge">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-            Spotlight Movie
-          </div>
-          <h1 className="hero-title">{spotlightMovie.title}</h1>
-          <div className="hero-meta">
-            <span className="rating-star">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      {spotlightMovie && (
+        <section className="hero-spotlight">
+          <div 
+            className="hero-bg" 
+            style={{ backgroundImage: `url('/hero_movie.png')` }}
+          />
+          <div className="hero-overlay" />
+          <div className="hero-content">
+            <div className="hero-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
-              {spotlightMovie.rating}
-            </span>
-            <div className="meta-divider" />
-            <span>{spotlightMovie.genre.split(' / ')[0]}</span>
-            <div className="meta-divider" />
-            <span>{spotlightMovie.duration}</span>
-            <div className="meta-divider" />
-            <span className="movie-card-format" style={{ fontSize: '0.75rem' }}>{spotlightMovie.format}</span>
+              Spotlight Movie
+            </div>
+            <h1 className="hero-title">{spotlightMovie.title}</h1>
+            <div className="hero-meta">
+              {spotlightMovie.rating && (
+                <>
+                  <span className="rating-star">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    {spotlightMovie.rating}
+                  </span>
+                  {(spotlightMovie.genre || spotlightMovie.duration || spotlightMovie.format) && <div className="meta-divider" />}
+                </>
+              )}
+              {spotlightMovie.genre && (
+                <>
+                  <span>{spotlightMovie.genre.includes(' / ') ? spotlightMovie.genre.split(' / ')[0] : spotlightMovie.genre}</span>
+                  {(spotlightMovie.duration || spotlightMovie.format) && <div className="meta-divider" />}
+                </>
+              )}
+              {spotlightMovie.duration && (
+                <>
+                  <span>{spotlightMovie.duration}</span>
+                  {spotlightMovie.format && <div className="meta-divider" />}
+                </>
+              )}
+              {spotlightMovie.format && (
+                <span className="movie-card-format" style={{ fontSize: '0.75rem' }}>{spotlightMovie.format}</span>
+              )}
+            </div>
+            <p className="hero-description">{spotlightMovie.description}</p>
+            <div className="hero-buttons">
+              <button className="btn-primary" onClick={() => handleBookNow(spotlightMovie)} style={{ cursor: 'pointer' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <rect width="20" height="12" x="2" y="6" rx="2" />
+                  <path d="M12 12h.01" />
+                  <path d="M17 12h.01" />
+                  <path d="M7 12h.01" />
+                </svg>
+                Book Tickets
+              </button>
+              <button className="btn-outline" onClick={() => setSelectedMovie(spotlightMovie)} style={{ cursor: 'pointer' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                Watch Trailer
+              </button>
+            </div>
           </div>
-          <p className="hero-description">{spotlightMovie.description}</p>
-          <div className="hero-buttons">
-            <button className="btn-primary" onClick={() => handleBookNow(spotlightMovie)} style={{ cursor: 'pointer' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <rect width="20" height="12" x="2" y="6" rx="2" />
-                <path d="M12 12h.01" />
-                <path d="M17 12h.01" />
-                <path d="M7 12h.01" />
-              </svg>
-              Book Tickets
-            </button>
-            <button className="btn-outline" onClick={() => setSelectedMovie(spotlightMovie)} style={{ cursor: 'pointer' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polygon points="5 3 19 12 5 21 5 3" />
-              </svg>
-              Watch Trailer
-            </button>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Filter and Search controls */}
       <EventFilter 
@@ -199,7 +217,13 @@ const Home = ({ navigateTo, activeCity, onSelectEvent }) => {
             </div>
             <div className="trailer-info">
               <h3 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-bright)' }}>{selectedMovie.title}</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--primary-hover)', margin: '0 0 0.75rem 0', fontWeight: '600' }}>{selectedMovie.genre} &bull; {selectedMovie.format}</p>
+              {(selectedMovie.genre || selectedMovie.format) && (
+                <p style={{ fontSize: '0.85rem', color: 'var(--primary-hover)', margin: '0 0 0.75rem 0', fontWeight: '600' }}>
+                  {selectedMovie.genre || ''}
+                  {selectedMovie.genre && selectedMovie.format ? ' • ' : ''}
+                  {selectedMovie.format || ''}
+                </p>
+              )}
               <p style={{ margin: 0, fontSize: '0.925rem', color: 'var(--text-muted)' }}>{selectedMovie.description}</p>
             </div>
           </div>

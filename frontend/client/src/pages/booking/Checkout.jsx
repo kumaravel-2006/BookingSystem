@@ -1,21 +1,37 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useBookingStore } from '../../store/bookingSlice'
+import { useBooking } from '../../hooks/useBooking'
+import { useNotifications } from '../../context/NotificationContext'
 import Loader from '../../components/common/Loader';
 
-const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, triggerToast, onPaymentSuccess }) => {
-  if (!selectedEvent || !selectedShowtime || !selectedSeats || selectedSeats.length === 0) {
-    return (
-      <div className="placeholder-page">
-        <h2>No Items in Cart</h2>
-        <button className="btn-primary" onClick={() => navigateTo('home')}>Go to Home</button>
-      </div>
-    );
-  }
+const Checkout = () => {
+  const navigate = useNavigate()
+  const { addNotification } = useNotifications()
+
+  const { selectedSeats, lockedBookingId, lockExpiresAt, clearBooking } = useBookingStore()
+  const { confirmBooking, loading } = useBooking()
+
+  const [timeLeft, setTimeLeft] = useState(null)
+
+  useEffect(() => {
+    if (!lockExpiresAt) return
+    const interval = setInterval(() => {
+      const diff = Math.max(0, new Date(lockExpiresAt) - Date.now())
+      setTimeLeft(Math.floor(diff / 1000))
+      if (diff === 0) {
+        clearBooking()
+        navigate('/')
+      }
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [lockExpiresAt])
 
   // Invoice calculations
-  const basePrice = selectedEvent.ticketPrice * selectedSeats.length;
-  const bookingFee = 1.50 * selectedSeats.length;
-  const taxRate = 0.08;
-  const taxFee = basePrice * taxRate;
+  const basePrice = selectedSeats.reduce((total, seat) => total + (seat.price ?? 0), 0)
+  const bookingFee = 1.50 * selectedSeats.length
+  const taxRate = 0.08
+  const taxFee = basePrice * taxRate
 
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
@@ -32,43 +48,36 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState(0);
 
+
+
   const applyPromoCode = () => {
     if (promoCode.toUpperCase() === 'CINEPASS20' || promoCode.toUpperCase() === 'WELCOME10') {
       const rate = promoCode.toUpperCase() === 'CINEPASS20' ? 0.20 : 0.10;
       setDiscount(basePrice * rate);
       setPromoStatus('valid');
-      triggerToast('Coupon discount applied!', 'success');
+      addNotification('Coupon discount applied!', 'success')
+
     } else {
       setDiscount(0);
       setPromoStatus('invalid');
-      triggerToast('Invalid promo code code', 'error');
+      addNotification('Invalid promo code code', 'error');
     }
   };
 
   const grandTotal = basePrice + bookingFee + taxFee - discount;
 
-  const handlePaymentSubmit = (e) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    setProcessingStep(1); // 'Verifying payment details...'
-
-    // Simulation steps
-    setTimeout(() => {
-      setProcessingStep(2); // 'Securing tickets...'
-      setTimeout(() => {
-        setProcessingStep(3); // 'Success!'
-        setTimeout(() => {
-          onPaymentSuccess({
-            bookingId: `CP-${Math.floor(100000 + Math.random() * 900000)}`,
-            totalPaid: grandTotal,
-            discountApplied: discount,
-            selectedSeats: selectedSeats
-          });
-          navigateTo('booking-success');
-        }, 800);
-      }, 1000);
-    }, 1200);
-  };
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault()
+    const result = await confirmBooking(lockedBookingId, {
+      method: 'CARD',
+      cardName,
+      email
+    })
+    if (result) {
+      clearBooking()
+      navigate('/booking-success', { state: { booking: result } })
+    }
+  }
 
   const getLoaderText = () => {
     switch (processingStep) {
@@ -83,11 +92,18 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
     }
   };
 
+
+  if (!lockedBookingId) {
+    navigate('/')
+    return null
+  }
+
+
   return (
     <div style={{ padding: '3rem 0', textAlign: 'left' }}>
-      <button 
-        className="btn-outline" 
-        onClick={() => navigateTo('seat-selection')} 
+      <button
+        className="btn-outline"
+        onClick={() => navigate(-1)}
         style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -98,6 +114,12 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
       </button>
 
       <h1 style={{ fontSize: '2.5rem', marginBottom: '2rem' }}>Checkout Details</h1>
+
+      {timeLeft !== null && (
+        <div style={{ color: timeLeft < 60 ? '#f87171' : '#facc15', marginBottom: '1rem' }}>
+          ⏱ Seats reserved for: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+        </div>
+      )}
 
       {isProcessing ? (
         <div className="glass-panel" style={{ maxWidth: '600px', margin: '0 auto', border: '1px solid var(--border-color)', borderRadius: '16px', overflow: 'hidden' }}>
@@ -111,73 +133,73 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
               <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
                 Secure Payment Details
               </h3>
-              
+
               <form onSubmit={handlePaymentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>Email Address</label>
-                  <input 
-                    type="email" 
-                    className="search-input" 
-                    placeholder="receipts@example.com" 
-                    style={{ paddingLeft: '1rem' }} 
+                  <input
+                    type="email"
+                    className="search-input"
+                    placeholder="receipts@example.com"
+                    style={{ paddingLeft: '1rem' }}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required 
+                    required
                   />
                 </div>
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>Name on Card</label>
-                  <input 
-                    type="text" 
-                    className="search-input" 
-                    placeholder="John Doe" 
-                    style={{ paddingLeft: '1rem' }} 
+                  <input
+                    type="text"
+                    className="search-input"
+                    placeholder="John Doe"
+                    style={{ paddingLeft: '1rem' }}
                     value={cardName}
                     onChange={(e) => setCardName(e.target.value)}
-                    required 
+                    required
                   />
                 </div>
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>Credit Card Number</label>
-                  <input 
-                    type="text" 
-                    className="search-input" 
-                    placeholder="1234 5678 1234 5678" 
-                    style={{ paddingLeft: '1rem' }} 
+                  <input
+                    type="text"
+                    className="search-input"
+                    placeholder="1234 5678 1234 5678"
+                    style={{ paddingLeft: '1rem' }}
                     value={cardNumber}
                     onChange={(e) => setCardNumber(e.target.value)}
                     maxLength="19"
-                    required 
+                    required
                   />
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>Expiration (MM/YY)</label>
-                    <input 
-                      type="text" 
-                      className="search-input" 
-                      placeholder="12/28" 
-                      style={{ paddingLeft: '1rem' }} 
+                    <input
+                      type="text"
+                      className="search-input"
+                      placeholder="12/28"
+                      style={{ paddingLeft: '1rem' }}
                       value={cardExpiry}
                       onChange={(e) => setCardExpiry(e.target.value)}
                       maxLength="5"
-                      required 
+                      required
                     />
                   </div>
                   <div style={{ flex: 1 }}>
                     <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>CVV Code</label>
-                    <input 
-                      type="password" 
-                      className="search-input" 
-                      placeholder="•••" 
-                      style={{ paddingLeft: '1rem' }} 
+                    <input
+                      type="password"
+                      className="search-input"
+                      placeholder="•••"
+                      style={{ paddingLeft: '1rem' }}
                       value={cardCvv}
                       onChange={(e) => setCardCvv(e.target.value)}
                       maxLength="3"
-                      required 
+                      required
                     />
                   </div>
                 </div>
@@ -205,10 +227,8 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
             <div className="glass-panel" style={{ padding: '1.5rem' }}>
               <h4 style={{ color: 'var(--text-bright)', marginBottom: '1rem' }}>Showtime Information</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9rem' }}>
-                <div>Event: <strong style={{ color: 'var(--text-bright)' }}>{selectedEvent.title}</strong></div>
-                <div>Venue: <strong>Grand Regal Cinemas</strong></div>
-                <div>Showtime: <strong>{selectedShowtime.date} @ {selectedShowtime.time}</strong></div>
-                <div>Seats Reserved: <strong style={{ color: 'var(--secondary)' }}>{selectedSeats.join(', ')}</strong></div>
+                <div>Seats: <strong>{selectedSeats.length} seat(s)</strong></div>
+                <div>Seats Reserved: <strong>{selectedSeats.map(s => s.id).join(', ')}</strong></div>
               </div>
             </div>
 
@@ -216,9 +236,9 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
             <div className="glass-panel" style={{ padding: '1.5rem' }}>
               <h4 style={{ color: 'var(--text-bright)', marginBottom: '1rem' }}>Order Invoice Breakdown</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1rem' }}>
-                
+
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Tickets ({selectedSeats.length} x ${selectedEvent.ticketPrice.toFixed(2)})</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Tickets ({selectedSeats.length} seat(s))</span>
                   <span style={{ color: 'var(--text-bright)' }}>${basePrice.toFixed(2)}</span>
                 </div>
 
@@ -242,17 +262,17 @@ const Checkout = ({ navigateTo, selectedEvent, selectedShowtime, selectedSeats, 
 
               {/* Promo Code Input */}
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                <input 
-                  type="text" 
-                  className="search-input" 
-                  placeholder="Coupon (e.g. CINEPASS20)" 
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Coupon (e.g. CINEPASS20)"
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value)}
-                  style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }} 
+                  style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}
                 />
-                <button 
-                  type="button" 
-                  className="btn-outline" 
+                <button
+                  type="button"
+                  className="btn-outline"
                   onClick={applyPromoCode}
                   style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', cursor: 'pointer' }}
                 >

@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 
-const ForgotPassword = ({ navigateTo }) => {
+import { useNavigate } from 'react-router-dom'
+import { authService } from '../../services/authService'
+
+const ForgotPassword = () => {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsSubmitted(true);
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      await authService.forgotPassword(email)
+      setIsSubmitted(true)
+    } catch (err) {
+      alert('Failed to send reset email. Please try again.')
+    }
+  }
 
   return (
     <div className="placeholder-page">
@@ -20,14 +29,14 @@ const ForgotPassword = ({ navigateTo }) => {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-main)' }}>Email Address</label>
-                <input 
-                  type="email" 
-                  className="search-input" 
-                  placeholder="name@example.com" 
-                  style={{ paddingLeft: '1rem' }} 
+                <input
+                  type="email"
+                  className="search-input"
+                  placeholder="name@example.com"
+                  style={{ paddingLeft: '1rem' }}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required 
+                  required
                 />
               </div>
 
@@ -37,7 +46,7 @@ const ForgotPassword = ({ navigateTo }) => {
             </form>
 
             <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', textAlign: 'center' }}>
-              <a href="#login" onClick={(e) => { e.preventDefault(); navigateTo('login'); }} style={{ fontWeight: '600', color: 'var(--text-muted)' }}>
+              <a href="#login" onClick={(e) => { e.preventDefault(); navigate('/login'); }} style={{ fontWeight: '600', color: 'var(--text-muted)' }}>
                 Back to Sign In
               </a>
             </div>
@@ -69,7 +78,7 @@ const ForgotPassword = ({ navigateTo }) => {
               <span>Temporary Verification Code: </span>
               <strong style={{ color: 'var(--secondary)', letterSpacing: '2px', fontSize: '1.1rem' }}>CP-RST99</strong>
             </div>
-            <button className="btn-primary" onClick={() => navigateTo('login')} style={{ width: '100%', justifyContent: 'center' }}>
+            <button className="btn-primary" onClick={() => navigate('/login')} style={{ width: '100%', justifyContent: 'center' }}>
               Return to Sign In
             </button>
           </div>
