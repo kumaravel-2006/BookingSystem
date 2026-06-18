@@ -8,8 +8,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SeatEventDTO {
+
     private Long eventId;
     private Long seatId;
+    private Long bookingId;
     private Long userId;
-    private String status;  // LOCKED, RELEASED, CONFIRMED
+    private String status;
+
 }

@@ -5,7 +5,7 @@ import java.util.List;
 
 @Data
 public class CheckoutDTO {
-    private Long BookingId;
+    private Long bookingId;
     private Long eventId;
     private List<Long> seatIds;
     private Double subtotal;

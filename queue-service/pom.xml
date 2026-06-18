@@ -5,11 +5,11 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.6</version>
+		<version>4.1.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.ticketing</groupId>
-	<artifactId>booking</artifactId>
+	<artifactId>queue_service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
 	<description/>
@@ -34,50 +34,27 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.kafka</groupId>
-			<artifactId>spring-kafka</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-flyway</artifactId>
+			<artifactId>spring-boot-starter-kafka</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-database-postgresql</artifactId>
-			<version>12.8.1</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
@@ -90,42 +67,33 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
+			<artifactId>spring-boot-starter-data-jpa-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.kafka</groupId>
-			<artifactId>spring-kafka-test</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-api</artifactId>
-			<version>0.11.5</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-kafka-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-impl</artifactId>
-			<version>0.11.5</version>
-			<scope>runtime</scope>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-jackson</artifactId>
-			<version>0.11.5</version>
-			<scope>runtime</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.google.zxing</groupId>
-			<artifactId>core</artifactId>
-			<version>3.5.3</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.google.zxing</groupId>
-			<artifactId>javase</artifactId>
-			<version>3.5.3</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

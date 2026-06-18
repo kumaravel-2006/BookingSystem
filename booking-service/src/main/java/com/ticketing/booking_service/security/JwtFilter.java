@@ -28,33 +28,36 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
+        System.out.println("=== JwtFilter triggered ===");
+        System.out.println("Auth header: " + authHeader);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("No Bearer token — skipping");
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = authHeader.substring(7);
+        System.out.println("Token valid: " + jwtUtil.validateToken(token));
 
         if (!jwtUtil.validateToken(token)) {
+            System.out.println("Token invalid — skipping");
             filterChain.doFilter(request, response);
             return;
         }
 
         String email = jwtUtil.getEmailFromToken(token);
-        String role = jwtUtil.getRoleFromToken(token);
         Long userId = jwtUtil.getUserIdFromToken(token);
+        String role = jwtUtil.getRoleFromToken(token);
+        System.out.println("Email: " + email + ", UserId: " + userId + ", Role: " + role);
 
-        // Store userId in request so controllers can access it without re-parsing the token
         request.setAttribute("userId", userId);
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
-                        email,
-                        null,
+                        email, null,
                         List.of(new SimpleGrantedAuthority("ROLE_" + role))
                 );
-
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);
 

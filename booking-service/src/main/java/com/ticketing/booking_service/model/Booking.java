@@ -41,7 +41,4 @@ public class Booking {
 
     @Column
     private LocalDateTime lockExpiresAt;
-
-
-
 }
