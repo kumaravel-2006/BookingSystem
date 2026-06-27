@@ -25,12 +25,8 @@ const EventDetails = () => {
     fetchEvent()
   }, [id])
 
-
-
   const dates = ['Today', 'Tomorrow', 'Wed Jun 10', 'Thu Jun 11'];
   const times = ['12:30 PM', '04:00 PM', '07:30 PM', '10:00 PM'];
-
-
 
   const handleBookingStart = () => {
     if (event.isHighDemand) {
@@ -39,13 +35,12 @@ const EventDetails = () => {
       navigate(`/events/${event.id}/seats`)
     }
   }
+
   if (loading) return <div>Loading...</div>
   if (!event) return <div>Event not found. <button onClick={() => navigate('/')}>Go Home</button></div>
 
-
   return (
     <div style={{ padding: '3rem 0', textAlign: 'left' }}>
-      {/* Back button */}
       <button
         className="btn-outline"
         onClick={() => navigate('/')}
@@ -58,18 +53,13 @@ const EventDetails = () => {
         Back to Events
       </button>
 
-      {/* Main Details Panel */}
       <div className="glass-panel" style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '3rem', padding: '2.5rem' }}>
         {/* Left column: Poster */}
         <div style={{ flex: '1 1 300px', maxWidth: '360px' }}>
           <div className="poster-wrapper" style={{ borderRadius: '12px', boxShadow: 'var(--shadow-md)' }}>
-            <img src={event.poster} alt={event.title} className="movie-poster" />
-            <span className="card-rating-badge" style={{ fontSize: '0.9rem', padding: '0.5rem 0.75rem' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-              {event.rating}
-            </span>
+            {event.imageUrl && (
+              <img src={event.imageUrl} alt={event.title} className="movie-poster" />
+            )}
           </div>
         </div>
 
@@ -95,7 +85,7 @@ const EventDetails = () => {
             )}
             <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: '1.1' }}>{event.title}</h1>
             <p style={{ fontSize: '1.05rem', color: 'var(--primary-hover)', fontWeight: '600' }}>
-              {event.genre} &bull; {event.duration} &bull; {event.format}
+              {event.category}
             </p>
           </div>
 
@@ -104,16 +94,12 @@ const EventDetails = () => {
             <p style={{ margin: 0, lineHeight: '1.6', fontSize: '0.95rem' }}>{event.description}</p>
           </div>
 
-          {event.cast && (
+          {event.venue && (
             <div>
-              <h4 style={{ marginBottom: '0.5rem', color: 'var(--text-bright)' }}>Cast & Crew</h4>
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                {event.cast.map((member, index) => (
-                  <span key={index} className="glass-panel" style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem', background: 'rgba(255,255,255,0.03)' }}>
-                    {member}
-                  </span>
-                ))}
-              </div>
+              <h4 style={{ marginBottom: '0.5rem', color: 'var(--text-bright)' }}>Venue</h4>
+              <p style={{ margin: 0, fontSize: '0.95rem' }}>
+                {event.venue.name}, {event.venue.city}
+              </p>
             </div>
           )}
 
@@ -121,7 +107,6 @@ const EventDetails = () => {
           <div className="glass-panel" style={{ padding: '1.5rem', marginTop: '1rem', border: '1px solid rgba(168, 85, 247, 0.2)' }}>
             <h3 style={{ fontSize: '1.2rem', marginBottom: '1.25rem', color: 'var(--text-bright)' }}>Select Show & Tickets</h3>
 
-            {/* Date selector */}
             <div className="showtime-selector">
               <div className="selector-label">Choose Date</div>
               <div className="date-chips">
@@ -137,7 +122,6 @@ const EventDetails = () => {
               </div>
             </div>
 
-            {/* Time selector */}
             <div className="showtime-selector" style={{ marginBottom: '2rem' }}>
               <div className="selector-label">Choose Show Time</div>
               <div className="time-chips">
@@ -153,12 +137,11 @@ const EventDetails = () => {
               </div>
             </div>
 
-            {/* Checkout summary action */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
               <div>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Ticket Price</span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Starting From</span>
                 <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-bright)' }}>
-                  ${event.ticketPrice.toFixed(2)} <span style={{ fontSize: '0.85rem', fontWeight: '400', color: 'var(--text-muted)' }}>/ seat</span>
+                  ${event.minPrice?.toFixed(2) ?? '0.00'} <span style={{ fontSize: '0.85rem', fontWeight: '400', color: 'var(--text-muted)' }}>/ seat</span>
                 </div>
               </div>
 

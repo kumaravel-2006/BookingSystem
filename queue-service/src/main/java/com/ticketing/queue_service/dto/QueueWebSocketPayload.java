@@ -1,6 +1,5 @@
 package com.ticketing.queue_service.dto;
 
-import com.ticketing.queue_service.model.enums.QueueStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,12 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class QueueStatusDTO {
-    private Long userId;
-    private Long eventId;
-    private QueueStatus status;
+public class QueueWebSocketPayload {
+    private String type; // "QUEUE_UPDATED" or "SEAT_ALLOCATED"
     private Long position;
-    private Long estimatedWaitTimeSeconds;
     private Long estimatedWaitMinutes;
-
 }

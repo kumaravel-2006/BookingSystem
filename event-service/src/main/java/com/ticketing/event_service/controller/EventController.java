@@ -31,6 +31,12 @@ public class EventController {
     public ResponseEntity<List<SeatDTO>> getSeatsByEventId(@PathVariable Long id){
         return ResponseEntity.ok(seatService.getSeatsByEventId(id));
     }
+    @PostMapping("/{id}/seats")
+    public ResponseEntity<List<SeatDTO>> createSeats(
+            @PathVariable Long id,
+            @RequestBody List<SeatDTO> seatDTOs) {
+        return ResponseEntity.ok(seatService.createSeats(id, seatDTOs));
+    }
 
     @PostMapping
     public ResponseEntity<EventDTO> createEvent(@RequestBody EventDTO dto){
@@ -47,4 +53,5 @@ public class EventController {
         eventService.deleteEvent(id);
         return ResponseEntity.noContent().build();
     }
+
 }

@@ -72,4 +72,12 @@ public class QueueCacheService {
         String key = getQueueKey(eventId);
         return redisTemplate.opsForZSet().zCard(key);
     }
+
+    /**
+     * 6. Get all users currently in the waiting queue.
+     */
+    public Set<String> getAllWaiters(Long eventId) {
+        String key = getQueueKey(eventId);
+        return redisTemplate.opsForZSet().range(key, 0, -1);
+    }
 }

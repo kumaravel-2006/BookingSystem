@@ -73,6 +73,7 @@ public class BookingService {
             booking.setStatus(BookingStatus.CANCELLED);
             booking.setPaymentStatus(PaymentStatus.FAILED);
             bookingRepository.save(booking);
+            seatLockService.releaseSeats(booking.getEventId(), booking.getSeatIds(), userId);
             kafkaProducer.publishSeatsReleased(booking.getEventId(), booking.getSeatIds(), userId);
             throw new RuntimeException("Seat lock expired. Please select seats again.");
         }

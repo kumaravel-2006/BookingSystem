@@ -47,6 +47,7 @@ const Checkout = () => {
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState(0);
+  const [isSuccess, setIsSuccess] = useState(false);
 
 
 
@@ -74,6 +75,7 @@ const Checkout = () => {
       email
     })
     if (result) {
+      setIsSuccess(true)
       clearBooking()
       navigate('/booking-success', { state: { booking: result } })
     }
@@ -93,8 +95,14 @@ const Checkout = () => {
   };
 
 
+  useEffect(() => {
+    if (!lockedBookingId && !isSuccess) {
+      navigate('/')
+    }
+  }, [lockedBookingId, navigate, isSuccess])
+
+
   if (!lockedBookingId) {
-    navigate('/')
     return null
   }
 

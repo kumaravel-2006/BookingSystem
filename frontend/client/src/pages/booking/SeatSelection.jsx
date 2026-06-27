@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { eventService } from '../../services/eventService'
 import { useBookingStore } from '../../store/bookingSlice'
 import { useBooking } from '../../hooks/useBooking'
+import { bookingService } from '../../services/bookingService'
 
 const SeatSelection = () => {
   const { id: eventId } = useParams()
@@ -16,8 +17,22 @@ const SeatSelection = () => {
 
   useEffect(() => {
     clearSeats()
+    setSeatLoading(true)
     eventService.getSeatMap(eventId)
-      .then(setSeatMap)
+      .then(async (seats) => {
+        const updatedSeats = await Promise.all(seats.map(async (seat) => {
+          try {
+            const statusInfo = await bookingService.getSeatStatus(eventId, seat.id);
+            if (statusInfo.locked) {
+              return { ...seat, status: 'LOCKED' };
+            }
+          } catch (err) {
+            console.error(`Failed to get status for seat ${seat.id}`, err);
+          }
+          return seat;
+        }));
+        setSeatMap(updatedSeats);
+      })
       .finally(() => setSeatLoading(false))
   }, [eventId])
 
@@ -32,12 +47,16 @@ const SeatSelection = () => {
 
   const handleProceedToCheckout = async () => {
     const seatIds = selectedSeats.map(s => s.id)
-    const result = await lockSeats(eventId, seatIds)
+    const totalAmount = selectedSeats.reduce((total, seat) => total + (Number(seat.price) ?? 0), 0)
+    console.log('Selected seats:', JSON.stringify(selectedSeats))
+    console.log('Total amount:', totalAmount)
+    const result = await lockSeats(eventId, seatIds, totalAmount)
     if (result) {
-      setLock(result.bookingId, result.expiresAt)
+      setLock(result.id, result.lockExpiresAt)
       navigate('/checkout')
     }
   }
+
   if (seatLoading) return <div>Loading seats...</div>
 
   return (

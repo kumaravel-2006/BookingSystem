@@ -6,10 +6,10 @@ export function useBooking() {
     const [loading, setLoading] = useState(false)
     const { addNotification } = useNotifications()
 
-    const lockSeats = async (eventId, seatId) => {
+    const lockSeats = async (eventId, seatIds, totalAmount) => {
         try {
             setLoading(true)
-            const result = await bookingService.lockSeats(eventId, seatId)
+            const result = await bookingService.lockSeats(eventId, seatIds, totalAmount)
             addNotification('Seats Locked Successfully!', 'success')
             return result;
         }
