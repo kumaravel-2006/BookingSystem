@@ -20,6 +20,8 @@ public class EventService {
 
     private final VenueRepository venueRepository;
 
+    private final com.ticketing.event_service.repository.SeatRepository seatRepository;
+
     public List<EventDTO> getAllEvents(){
         return eventRepository.findAll()
                 .stream()
@@ -72,7 +74,9 @@ public class EventService {
         return toDTO(eventRepository.save(event));
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteEvent(Long id){
+        seatRepository.deleteByEventId(id);
         eventRepository.deleteById(id);
     }
 
