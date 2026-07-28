@@ -33,6 +33,7 @@ public class VenueService {
         venue.setAddress(dto.getAddress());
         venue.setCity(dto.getCity());
         venue.setCapacity(dto.getCapacity());
+        venue.setTheatreClass(dto.getTheatreClass() != null ? dto.getTheatreClass() : "STANDARD");
         return toDTO(venueRepository.save(venue));
     }
 
@@ -47,6 +48,7 @@ public class VenueService {
         dto.setAddress(venue.getAddress());
         dto.setCity(venue.getCity());
         dto.setCapacity(venue.getCapacity());
+        dto.setTheatreClass(venue.getTheatreClass());
         return dto;
     }
 }

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getToken } from '../utils/jwtUtils'
+import { getToken, removeToken } from '../utils/jwtUtils'
 
 const bookingApi = axios.create({
   baseURL: 'http://localhost:8082'
@@ -10,6 +10,17 @@ bookingApi.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
+
+bookingApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      removeToken()
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
 
 const lockSeats = async (eventId, seatIds, totalAmount) => {
   const res = await bookingApi.post('/bookings/lock', { eventId, seatIds, totalAmount })

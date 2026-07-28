@@ -38,7 +38,65 @@ public class SeatService {
     }
 
     public List<SeatDTO> getSeatsByEventId(Long eventId){
-        return seatRepository.findByEventId(eventId).stream().map(this::toDTO).collect(Collectors.toList());
+        List<Seat> seats = seatRepository.findByEventId(eventId);
+        if (seats.isEmpty()) {
+            Event event = eventRepository.findById(eventId).orElse(null);
+            if (event != null && event.getVenue() != null) {
+                generateSeatsForEventOnTheFly(event, event.getVenue());
+                seats = seatRepository.findByEventId(eventId);
+            }
+        }
+        return seats.stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    private void generateSeatsForEventOnTheFly(Event event, com.ticketing.event_service.model.Venue venue) {
+        String layoutClass = venue.getTheatreClass();
+        if (layoutClass == null) {
+            layoutClass = "STANDARD";
+        }
+        
+        int rows = 5;
+        int seatsPerRow = 10;
+        
+        if ("IMAX".equalsIgnoreCase(layoutClass)) {
+            rows = 8;
+            seatsPerRow = 10;
+        } else if ("PREMIUM".equalsIgnoreCase(layoutClass)) {
+            rows = 4;
+            seatsPerRow = 10;
+        } else if ("STANDARD".equalsIgnoreCase(layoutClass)) {
+            rows = 6;
+            seatsPerRow = 10;
+        }
+        
+        for (int i = 0; i < rows; i++) {
+            char rowChar = (char) ('A' + i);
+            String row = String.valueOf(rowChar);
+            for (int col = 1; col <= seatsPerRow; col++) {
+                Seat seat = new Seat();
+                seat.setEvent(event);
+                seat.setRow(row);
+                seat.setNumber(col);
+                
+                java.math.BigDecimal basePrice = event.getMinPrice() != null ? event.getMinPrice() : new java.math.BigDecimal("10.0");
+                if (i < 2) {
+                    seat.setCategory(SeatCategory.VIP);
+                    seat.setPrice(basePrice.multiply(new java.math.BigDecimal("2.0")));
+                } else if (i < 4) {
+                    seat.setCategory(SeatCategory.PREMIUM);
+                    seat.setPrice(basePrice.multiply(new java.math.BigDecimal("1.5")));
+                } else {
+                    seat.setCategory(SeatCategory.STANDARD);
+                    seat.setPrice(basePrice);
+                }
+                
+                seat.setStatus(SeatStatus.AVAILABLE);
+                seatRepository.save(seat);
+            }
+        }
+        
+        event.setAvailableSeats(rows * seatsPerRow);
+        eventRepository.save(event);
     }
     public SeatDTO updateSeatStatus(Long id, String status) {
         Seat seat = seatRepository.findById(id)

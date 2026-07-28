@@ -1,15 +1,45 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import EventCard from '../../components/events/EventCard';
 import EventFilter from '../../components/events/EventFilter';
+import { eventService } from '../../services/eventService';
 
-const mockMovies = [];
 const mockOffers = [];
 
-const Home = ({ navigateTo, activeCity, onSelectEvent }) => {
+const Home = () => {
   const [activeTab, setActiveTab] = useState('showing'); // 'showing', 'coming_soon', 'trending'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [selectedMovie, setSelectedMovie] = useState(null); // Movie object for trailer modal
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        setLoading(true);
+        const data = await eventService.getEvents();
+        // Support pageable DTO content or raw array
+        const list = data.content ?? data;
+        // Normalize fields (minPrice -> ticketPrice, imageUrl -> poster)
+        const normalized = list.map(m => ({
+          ...m,
+          ticketPrice: m.minPrice,
+          poster: m.imageUrl || '/hero_movie.png',
+          genre: m.category,
+          format: '2D / 3D / IMAX'
+        }));
+        setMovies(normalized);
+      } catch (err) {
+        console.error('Failed to fetch events for homepage', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMovies();
+  }, []);
 
   const filterTabs = [
     { value: 'showing', label: 'Now Showing' },
@@ -18,26 +48,28 @@ const Home = ({ navigateTo, activeCity, onSelectEvent }) => {
   ];
 
   const genreOptions = [
-    { value: 'All', label: 'All Genres' },
-    { value: 'Sci-Fi', label: 'Sci-Fi' },
-    { value: 'Cyberpunk', label: 'Cyberpunk' },
-    { value: 'Fantasy', label: 'Fantasy' },
-    { value: 'Action', label: 'Action' }
+    { value: 'All', label: 'All Categories' },
+    { value: 'Movie', label: 'Movies' },
+    { value: 'Concert', label: 'Concerts' },
+    { value: 'Comedy', label: 'Comedies' },
+    { value: 'Play', label: 'Plays' }
   ];
 
   // Filter movies based on category, search, and genre
   const filteredMovies = useMemo(() => {
-    return mockMovies.filter(movie => {
-      const matchesCategory = movie.category === activeTab;
+    return movies.filter(movie => {
+      const matchesCategory = 
+        activeTab === 'showing' ? movie.status === 'PUBLISHED' :
+        activeTab === 'coming_soon' ? movie.status === 'DRAFT' :
+        true; // trending / all
       const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesGenre = selectedGenre === 'All' || movie.genre.includes(selectedGenre);
+      const matchesGenre = selectedGenre === 'All' || movie.category.toLowerCase() === selectedGenre.toLowerCase();
       return matchesCategory && matchesSearch && matchesGenre;
     });
-  }, [activeTab, searchQuery, selectedGenre]);
+  }, [activeTab, searchQuery, selectedGenre, movies]);
 
   const handleBookNow = (movie) => {
-    onSelectEvent(movie);
-    navigateTo('event-details');
+    navigate(`/events/${movie.id}`);
   };
 
   const getOfferIcon = (iconName) => {
@@ -69,7 +101,7 @@ const Home = ({ navigateTo, activeCity, onSelectEvent }) => {
   };
 
   // Find spotlight movie (Cosmo Horizon, ID 1)
-  const spotlightMovie = mockMovies.find(m => m.id === 1) || mockMovies[0];
+  const spotlightMovie = movies.find(m => m.id === 1) || movies[0];
 
   return (
     <div>

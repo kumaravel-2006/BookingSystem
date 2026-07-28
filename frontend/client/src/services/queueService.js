@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getToken } from '../utils/jwtUtils'
+import { getToken, removeToken } from '../utils/jwtUtils'
 
 const queueApi = axios.create({
   baseURL: 'http://localhost:8083'
@@ -10,6 +10,17 @@ queueApi.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
+
+queueApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      removeToken()
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
 
 const joinQueue = async (eventId) => {
     const res = await queueApi.post('/queue/join', { eventId })

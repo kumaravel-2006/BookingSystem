@@ -25,6 +25,9 @@ public class Venue {
     @Column(nullable = false)
     private Integer capacity;
 
+    @Column(name = "theatre_class")
+    private String theatreClass = "STANDARD";
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

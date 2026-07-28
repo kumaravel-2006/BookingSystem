@@ -14,10 +14,16 @@ const SeatSelection = () => {
   const { lockSeats, loading } = useBooking()
   const [seatMap, setSeatMap] = useState([])
   const [seatLoading, setSeatLoading] = useState(true)
+  const [event, setEvent] = useState(null)
 
   useEffect(() => {
     clearSeats()
     setSeatLoading(true)
+    
+    eventService.getEventById(eventId)
+      .then(setEvent)
+      .catch(err => console.error('Failed to load event details', err))
+
     eventService.getSeatMap(eventId)
       .then(async (seats) => {
         const updatedSeats = await Promise.all(seats.map(async (seat) => {
@@ -82,7 +88,7 @@ const SeatSelection = () => {
         </div>
 
         <div className="glass-panel" style={{ padding: '0.75rem 1.25rem', fontSize: '0.9rem' }}>
-          Venue: <strong style={{ color: 'var(--text-bright)' }}>Grand Regal Cinemas, Screen 4</strong>
+          Venue: <strong style={{ color: 'var(--text-bright)' }}>{event?.venue?.name || 'Grand Regal Cinemas'}, {event?.venue?.city || ''}</strong>
         </div>
       </div>
 

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom'
 import { eventService } from '../../services/eventService'
+import { useAuth } from '../../hooks/useAuth'
 
 const EventDetails = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [event, setEvent] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -29,6 +31,10 @@ const EventDetails = () => {
   const times = ['12:30 PM', '04:00 PM', '07:30 PM', '10:00 PM'];
 
   const handleBookingStart = () => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
     if (event.isHighDemand) {
       navigate(`/queue/${event.id}`)
     } else {

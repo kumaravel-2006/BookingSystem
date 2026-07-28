@@ -29,7 +29,8 @@ const EventForm = () => {
     name: '',
     address: '',
     city: '',
-    capacity: 100
+    capacity: 60,
+    theatreClass: 'STANDARD'
   });
 
   const [loading, setLoading] = useState(false);
@@ -84,10 +85,19 @@ const EventForm = () => {
   };
 
   const handleVenueChange = (e) => {
-    setNewVenue(prev => ({
-      ...prev,
-      [e.target.name]: e.target.type === 'number' ? parseInt(e.target.value) || 0 : e.target.value
-    }));
+    const { name, value } = e.target;
+    setNewVenue(prev => {
+      const updated = {
+        ...prev,
+        [name]: e.target.type === 'number' ? parseInt(value) || 0 : value
+      };
+      if (name === 'theatreClass') {
+        if (value === 'IMAX') updated.capacity = 80;
+        else if (value === 'PREMIUM') updated.capacity = 40;
+        else if (value === 'STANDARD') updated.capacity = 60;
+      }
+      return updated;
+    });
   };
 
   const handleCreateVenueSubmit = async (e) => {
@@ -103,7 +113,7 @@ const EventForm = () => {
       setVenues(prev => [...prev, created]);
       setFormData(prev => ({ ...prev, venueId: created.id.toString() }));
       setIsVenueModalOpen(false);
-      setNewVenue({ name: '', address: '', city: '', capacity: 100 });
+      setNewVenue({ name: '', address: '', city: '', capacity: 60, theatreClass: 'STANDARD' });
     } catch (err) {
       showToast('Failed to create venue.', 'error');
     }
@@ -309,7 +319,7 @@ const EventForm = () => {
               >
                 {venues.map(v => (
                   <option key={v.id} value={v.id}>
-                    {v.name} ({v.city}) - Cap: {v.capacity}
+                    {v.name} ({v.city}) - Class: {v.theatreClass || 'STANDARD'} ({v.capacity} seats)
                   </option>
                 ))}
               </select>
@@ -413,16 +423,18 @@ const EventForm = () => {
                 </div>
                 
                 <div className="form-group">
-                  <label>Capacity *</label>
-                  <input
-                    type="number"
-                    name="capacity"
+                  <label>Theatre Class *</label>
+                  <select
+                    name="theatreClass"
                     className="form-control"
-                    value={newVenue.capacity}
+                    value={newVenue.theatreClass}
                     onChange={handleVenueChange}
-                    min="1"
                     required
-                  />
+                  >
+                    <option value="IMAX">IMAX (80 seats)</option>
+                    <option value="PREMIUM">PREMIUM (40 seats)</option>
+                    <option value="STANDARD">STANDARD (60 seats)</option>
+                  </select>
                 </div>
               </div>
 

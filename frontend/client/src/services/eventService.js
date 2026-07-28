@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getToken } from '../utils/jwtUtils'
+import { getToken, removeToken } from '../utils/jwtUtils'
 
 const eventApi = axios.create({
   baseURL: 'http://localhost:8081'
@@ -10,6 +10,17 @@ eventApi.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
+
+eventApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      removeToken()
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
 
 export const eventService = {
   getEvents: async (params = {}) => {

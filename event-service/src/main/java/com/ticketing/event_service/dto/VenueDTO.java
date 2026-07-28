@@ -9,4 +9,5 @@ public class VenueDTO {
     private String address;
     private String city;
     private Integer capacity;
+    private String theatreClass;
 }
