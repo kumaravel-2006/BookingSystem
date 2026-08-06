@@ -1,10 +1,10 @@
-package com.ticketing.booking;
+package com.ticketing.booking_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class BookingApplicationTests {
+class BookingServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
