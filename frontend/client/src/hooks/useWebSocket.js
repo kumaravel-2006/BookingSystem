@@ -7,7 +7,7 @@ export function useWebSocket(topic, onMessage) {
 
   const connect = useCallback(() => {
     const token = getToken()
-    const url = `ws://localhost:8083/ws?token=${token}`
+    const url = `wss://cinepassapi.kumaravel.online/ws?token=${token}`
     ws.current = new WebSocket(url)
 
     ws.current.onopen = () => {

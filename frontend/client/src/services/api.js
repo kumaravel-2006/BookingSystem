@@ -3,7 +3,7 @@ import { getToken, removeToken } from '../utils/jwtUtils';
 
 
 const api = axios.create({
-  baseURL: 'http://localhost:8085/',
+  baseURL: 'https://cinepassapi.kumaravel.online/',
   headers: {
     'Content-Type': 'application/json'
   }

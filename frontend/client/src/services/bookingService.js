@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getToken, removeToken } from '../utils/jwtUtils'
 
 const bookingApi = axios.create({
-  baseURL: 'http://localhost:8082'
+  baseURL: 'https://cinepassapi.kumaravel.online'
 })
 
 bookingApi.interceptors.request.use((config) => {

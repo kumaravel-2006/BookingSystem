@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getToken, removeToken } from '../utils/jwtUtils'
 
 const eventApi = axios.create({
-  baseURL: 'http://localhost:8081'
+  baseURL: 'https://cinepassapi.kumaravel.online'
 })
 
 eventApi.interceptors.request.use((config) => {

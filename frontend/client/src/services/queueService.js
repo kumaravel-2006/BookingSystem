@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getToken, removeToken } from '../utils/jwtUtils'
 
 const queueApi = axios.create({
-  baseURL: 'http://localhost:8083'
+  baseURL: 'https://cinepassapi.kumaravel.online'
 })
 
 queueApi.interceptors.request.use((config) => {
